@@ -15,7 +15,7 @@ public enum PlayContext
 {
     Action,
     ActionTargetting,
-    MenuInteraction,
+    AltarContext,
     Simulating // AI is taking over
 }
 
@@ -40,8 +40,10 @@ public class GameController : MonoBehaviour, IEntityController
     PlayContext _playContext;
 
     Dictionary<PlayContext, IPlayContext> _playContexts;
+    Dictionary<PlayContext, BaseContextData> _playContextData;
 
     List<Monster> _monsters;
+    List<Altar> _altars;
 
     Dictionary<MonsterConfig, int> _monsterIDCounters;
 
@@ -56,17 +58,45 @@ public class GameController : MonoBehaviour, IEntityController
 
     public event Action<GameResult> GameFinished;
 
+    IUIController _uiController;
+
     private void Awake()
     {
         _gameInput = new GameInput(_gameConfig.InputDelay);
-        _playContexts = new Dictionary<PlayContext, IPlayContext>();
-        _playContexts[PlayContext.Action] = new ActionPlayContext();
+        _messageQueue = new MessageQueue(_gameConfig.QueueLimit);
+
+        InitializePlayContexts();
+
         _scheduledEntities = new List<IScheduledEntity>();
         _scheduledToAdd = new List<IScheduledEntity>();
         _monsters = new List<Monster>();
         _monstersToRemove = new List<Monster>();
-        _messageQueue = new MessageQueue(_gameConfig.QueueLimit);
         _monsterIDCounters = new Dictionary<MonsterConfig, int>();
+        _altars = new List<Altar>();
+
+        _uiController = FindObjectOfType<UIController>();
+    }
+
+    private void InitializePlayContexts()
+    {
+        _playContexts = new Dictionary<PlayContext, IPlayContext>();
+        _playContexts[PlayContext.Action] = new ActionPlayContext();
+        _playContexts[PlayContext.AltarContext] = new AltarContext();
+
+        _playContextData = new Dictionary<PlayContext, BaseContextData>();
+        ActionContextData actionCtxtData = new ActionContextData();
+        actionCtxtData.config = _gameConfig;
+        actionCtxtData.controller = this;
+        actionCtxtData.input = _gameInput;
+        actionCtxtData.queue = _messageQueue;
+        _playContextData[PlayContext.Action] = actionCtxtData;
+
+        AltarContextData altarContextData = new AltarContextData();
+        altarContextData.config = _gameConfig;
+        altarContextData.input = _gameInput;
+        altarContextData.queue = _messageQueue;
+        altarContextData.sacrificeAvailable = false;
+        _playContextData[PlayContext.AltarContext] = altarContextData;
     }
 
     // Start is called before the first frame update
@@ -77,9 +107,9 @@ public class GameController : MonoBehaviour, IEntityController
 
     void StartGame()
     {
-        _distanceFunction = (_gameConfig.DistanceStrategy == DistanceStrategy.Manhattan) ? (DistanceFunctionDelegate)MapUtils.GetManhattanDistance : (DistanceFunctionDelegate)MapUtils.GetChebyshevDistance;            
+        _distanceFunction = (_gameConfig.DistanceStrategy == DistanceStrategy.Manhattan) ? (DistanceFunctionDelegate)MapUtils.GetManhattanDistance : (DistanceFunctionDelegate)MapUtils.GetChebyshevDistance;
 
-        if(_gameConfig.Seed >= 0)
+        if (_gameConfig.Seed >= 0)
         {
             URandom.InitState(_gameConfig.Seed);
         }
@@ -93,12 +123,32 @@ public class GameController : MonoBehaviour, IEntityController
         _scheduledEntities.Add(_player);
         _messageQueue.AddEntry("You've finally entered the tower. An ominous silence permeates the hall.");
 
+        foreach(var spawnPoint in _map.AltarSpawns)
+        {
+            Altar altar = Instantiate<Altar>(_gameConfig.AltarPrefab);
+            altar.Setup(spawnPoint.AltarConfig, _map, this, _messageQueue);
+            altar.StartGame(spawnPoint.Coords);
+            _altars.Add(altar);
+        }
+
         _playContext = PlayContext.Action;
 
         _turns = 0;
         _elapsedUnits = 0.0f;
 
         _gameResult = GameResult.Running;
+
+        SetupActionContexts();
+    }
+
+    private void SetupActionContexts()
+    {
+        ActionContextData actionContext = _playContextData[PlayContext.Action] as ActionContextData;
+        actionContext.player = _player;
+        actionContext.map = _map;
+
+        AltarContextData altarContext = _playContextData[PlayContext.AltarContext] as AltarContextData;
+        altarContext.player = _player;
     }
 
     void ClearGame()
@@ -140,7 +190,7 @@ public class GameController : MonoBehaviour, IEntityController
         _gameInput.Read();
 
         bool willSpendTime;
-        _playContext = _playContexts[_playContext].Update(_gameInput, _player, _map, _gameConfig, this, _messageQueue, out willSpendTime);
+        _playContext = _playContexts[_playContext].Update(_playContextData[_playContext], out willSpendTime);
 
         if(willSpendTime)
         {
@@ -250,6 +300,23 @@ public class GameController : MonoBehaviour, IEntityController
     public Player GetPlayer()
     {
         return _player;
+    }
+
+    public void SetupAltarContext(AltarConfig data, bool sacrificeAvailable, Action callback)
+    {
+        AltarContextData contextData = _playContextData[PlayContext.AltarContext] as AltarContextData;
+        contextData.altarConfig = data;
+        contextData.sacrificeAvailable = sacrificeAvailable;
+        contextData.callback = callback;
+        if(contextData.sacrificeAvailable)
+        {
+            if(contextData.Choices == null)
+                contextData.Choices = new ItemConfig[3];
+        }
+        else if(contextData.Choices != null)
+        {
+            contextData.Choices = null;
+        }
     }
 
     public DistanceFunctionDelegate DistanceFunction => _distanceFunction;

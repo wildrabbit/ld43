@@ -17,8 +17,16 @@ public class ResultData
 
 public class ActionPlayContext : IPlayContext
 {
-    public PlayContext Update(GameInput input, Player player, Map map, GameConfig config, IEntityController entityController, MessageQueue queue, out bool willSpendTime)
+    public PlayContext Update(BaseContextData context, out bool willSpendTime)
     {
+        ActionContextData actionData = context as ActionContextData;
+        GameInput input = actionData.input;
+        Player player = actionData.player;
+        Map map = actionData.map;
+        GameConfig config = actionData.config;
+        IEntityController entityController = actionData.controller;
+        MessageQueue queue = actionData.queue;
+
         willSpendTime = false;
 
         if(input.xAxis != 0 || input.yAxis != 0)
@@ -56,7 +64,7 @@ public class ActionPlayContext : IPlayContext
                                 int j = i + 1;
                                 for (; j < entities.Count; ++j)
                                 {
-                                    if(entities[j].DefaultInteraction == InteractionType.Attack || entities[j].DefaultInteraction == InteractionType.OpenMenu || entities[j].DefaultInteraction == InteractionType.TryOpen)
+                                    if(entities[j].DefaultInteraction == InteractionType.Attack || entities[j].DefaultInteraction == InteractionType.CustomInteraction || entities[j].DefaultInteraction == InteractionType.Altar)
                                     {
                                         playerWillMove = false;
                                         break;
@@ -73,10 +81,9 @@ public class ActionPlayContext : IPlayContext
                             }
                             break;
                         }
-                        case InteractionType.Pick:
+                        case InteractionType.CustomInteraction:
                         {
-                            // Player.AddToInv(e);
-                            break;
+                            return e.PlayerInteracts();                            
                         }
                     }
                     if(stop)

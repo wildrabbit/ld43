@@ -14,6 +14,7 @@ public class GameConfig : ScriptableObject
 
     [Header("Main game prefabs")]
     public Map MapPrefab;
+    public Altar AltarPrefab;
 
     [Header("Entities config")]
     public PlayerConfig PlayerConfig;
@@ -30,4 +31,7 @@ public class GameConfig : ScriptableObject
     public int QueueLimit = 100;
 
     public int MonsterLimit = 5;
+
+    [Header("UI menus")]
+    public Canvas AltarUIPrefab;
 }

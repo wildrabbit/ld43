@@ -17,4 +17,5 @@ public interface IEntityController
     List<Entity> GetEntitiesAt(Vector2Int actionTargetCoords, Entity[] excluded = null);
     void RemoveEntity(Entity e);
     Player GetPlayer();
+    void SetupAltarContext(AltarConfig data, bool sacrificeAvailable, Action callback);
 }

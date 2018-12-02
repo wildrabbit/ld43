@@ -10,28 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23bb34a2d3988ca4fb5e2e5f3d9a74e3, type: 3}
-  m_Name: Ogre
+  m_Name: Mage
   m_EditorClassIdentifier: 
-  Prefab: {fileID: 2174726690547007893, guid: 0c4a4d246ba8172499b480b473da79db, type: 3}
-  Name: Ogre
+  Prefab: {fileID: 8842902094511777084, guid: 066548ba5cb95d14084593b3207f7c96, type: 3}
+  Name: Mage
   Stats:
     LifeData:
-      MaxHP: 120
-      HP: 120
+      MaxHP: 80
+      HP: 80
       HPRegen: 0
-    HitChance: 60
-    AvoidChance: 5
-    MinAttack: 12
-    MaxAttack: 20
-    Defense: 10
+    HitChance: 50
+    AvoidChance: 10
+    MinAttack: 25
+    MaxAttack: 30
+    Defense: 5
     CritChance: 0
     CritExtra: 0
     BaseAttackRange: 1
-    VisibilityRange: 3
+    VisibilityRange: 5
   DefaultPlayerInteraction: 5
   MonsterInteraction: 0
   Prio: 0
-  ThinkingDelay: 1.5
+  ThinkingDelay: 1
   PathUpdateDelay: 6
   EscapeHPPercent: 25
   KeepAttackingPlayerIfBelowHPPercent: 20

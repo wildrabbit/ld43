@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MapPrefab: {fileID: 8655036446896915448, guid: 6291ae22a57a13942916557c9747426a,
     type: 3}
+  AltarPrefab: {fileID: 3859297295122459330, guid: fe525189b9ba2ac438a518a40daa4873,
+    type: 3}
   PlayerConfig: {fileID: 11400000, guid: cff95b60a225b924b944ac77b6f19538, type: 2}
   DefaultTimescale: 1
   AllowDiagonals: 1
@@ -23,3 +25,4 @@ MonoBehaviour:
   Seed: -1
   QueueLimit: 100
   MonsterLimit: 5
+  AltarUIPrefab: {fileID: 0}

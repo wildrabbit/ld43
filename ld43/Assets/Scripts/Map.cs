@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Tilemaps;
+using System;
+using URandom = UnityEngine.Random;
 
 public class Map: MonoBehaviour, IScheduledEntity
 {
@@ -17,7 +19,7 @@ public class Map: MonoBehaviour, IScheduledEntity
             Distance = dist;
         }
 
-        public string ToString() => $"{Coords} <- {(From.HasValue ? From.Value.ToString() : "NONE")} [{Distance}]";
+        public override string ToString() => $"{Coords} <- {(From.HasValue ? From.Value.ToString() : "NONE")} [{Distance}]";
     }
 
     public class SpawnData
@@ -41,6 +43,9 @@ public class Map: MonoBehaviour, IScheduledEntity
 
     Dictionary<Vector2Int, SpawnData> _monsterSpawnCoords;
 
+    public List<AltarSpawnPoint> AltarSpawns => _altarSpawns;
+    List<AltarSpawnPoint> _altarSpawns;
+
     IEntityController _entityController;
     
     public Vector2Int PlayerStartCoords => _playerStart;
@@ -51,6 +56,19 @@ public class Map: MonoBehaviour, IScheduledEntity
         _entityController = entityController;
         SetupPlayerStart();
         SetupMonsterStartCoords();
+        SetupAltarSpawns();
+
+    }
+
+    private void SetupAltarSpawns()
+    {
+        _altarSpawns = new List<AltarSpawnPoint>();
+        AltarSpawnPoint[] spawnPoints = FindObjectsOfType<AltarSpawnPoint>();
+        foreach (var spawn in spawnPoints)
+        {
+           spawn.Coords = (Vector2Int)_groundTilemap.layoutGrid.WorldToCell(spawn.transform.position);
+           _altarSpawns.Add(spawn);
+        }
     }
 
     public void AddTime(float timeUnits, ref PlayContext playContext)
@@ -67,15 +85,15 @@ public class Map: MonoBehaviour, IScheduledEntity
             pair.Value.Elapsed += timeUnits;
             if (pair.Value.Elapsed >= pair.Value.Delay && !_entityController.FindEntityNearby(pair.Key, 1))
             {
-                pair.Value.Delay = Random.Range(pair.Value.Point.MinSpawnTime, pair.Value.Point.MaxSpawnTime);
+                pair.Value.Delay = URandom.Range(pair.Value.Point.MinSpawnTime, pair.Value.Point.MaxSpawnTime);
                 pair.Value.Elapsed = 0;
                 MonsterConfig cfg = PickMonster(pair.Value.Point.MonsterEntries);
                 if(cfg != null)
                 {
                     // Add some small noise to the coords.
                     Vector2Int coords = pair.Key;
-                    coords.x += Random.Range(-1, 2);
-                    coords.y += Random.Range(-1, 2);
+                    coords.x += URandom.Range(-1, 2);
+                    coords.y += URandom.Range(-1, 2);
                     _entityController.CreateMonster(cfg, coords);
                 }
             }
@@ -91,7 +109,7 @@ public class Map: MonoBehaviour, IScheduledEntity
             sumWeights += entry.weight;
         }
 
-        int randomPick = Random.Range(0, sumWeights);
+        int randomPick = URandom.Range(0, sumWeights);
         int aggregate = 0;
         foreach (var entry in entries)
         {
@@ -228,7 +246,7 @@ public class Map: MonoBehaviour, IScheduledEntity
         {
             MonsterSpawnPoint spawnPoint = spawn.GetComponent<MonsterSpawnPoint>();
             Vector2Int coords = (Vector2Int)_groundTilemap.layoutGrid.WorldToCell(spawn.transform.position);
-            float initialDelay = Random.Range(spawnPoint.MinSpawnTime, spawnPoint.MaxSpawnTime);
+            float initialDelay = URandom.Range(spawnPoint.MinSpawnTime, spawnPoint.MaxSpawnTime);
             _monsterSpawnCoords.Add(coords, new SpawnData(spawnPoint,initialDelay));
         }
     }

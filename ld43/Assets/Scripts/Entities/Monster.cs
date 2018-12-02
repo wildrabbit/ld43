@@ -48,7 +48,7 @@ public class Monster : Entity
         int distance = _entityController.DistanceFunction(p.Coords, this.Coords);
         bool willEscape = 100 * HPPercent <= _monsterConfig.EscapeHPPercent && 100 * p.HPPercent > _monsterConfig.KeepAttackingPlayerIfBelowHPPercent;
 
-        if (_elapsedNextAction >= _decisionDelay)
+        while (_elapsedNextAction >= _decisionDelay)
         {
             switch (_currentAction)
             {
@@ -105,7 +105,7 @@ public class Monster : Entity
                         {
                             EngageAttack();
                         }
-                        else if(distance < _monsterConfig.Stats.VisibilityRange)
+                        else if(distance <= _monsterConfig.Stats.VisibilityRange)
                         {
                             if (_path.Count == 0 || _pathIdx == _path.Count - 1 || _elapsedPathUpdate > _monsterConfig.PathUpdateDelay)
                             {
@@ -219,6 +219,7 @@ public class Monster : Entity
                         }
                         else if (distance <= _monsterConfig.Stats.BaseAttackRange)
                         {
+                            _messageQueue.AddEntry(Name + " stats attacking");
                             EngageAttack();
                         }
                         else
@@ -233,6 +234,10 @@ public class Monster : Entity
                     }
             }
 
+            if(HP > 0)
+            {
+                RegenHealth();
+            }
             _elapsedNextAction = Mathf.Max(_elapsedNextAction - _decisionDelay, 0.0f);
             _decisionDelay = _monsterConfig.ThinkingDelay;
         }

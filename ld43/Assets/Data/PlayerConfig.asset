@@ -19,7 +19,6 @@ MonoBehaviour:
       MaxHP: 100
       HP: 100
       HPRegen: 3
-    Speed: 1
     HitChance: 70
     AvoidChance: 5
     MinAttack: 15
@@ -27,8 +26,9 @@ MonoBehaviour:
     Defense: 8
     CritChance: 10
     CritExtra: 30
-    Range: 1
+    BaseAttackRange: 1
     VisibilityRange: 5
   DefaultPlayerInteraction: 0
   MonsterInteraction: 0
   Prio: 0
+  Speed: 1

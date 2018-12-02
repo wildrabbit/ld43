@@ -9,9 +9,9 @@ public enum InteractionType
     Block, // Like bumping vs a wall
     Inspect,
     Pick,
-    TryOpen,
+    Altar,
     Attack,
-    OpenMenu
+    CustomInteraction
 }
 
 public class EntityConfig : ScriptableObject
