@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73fbb7edc3725df45b72ec4538d7a0bb, type: 3}
+  m_Name: PlayerConfig
+  m_EditorClassIdentifier: 
+  Prefab: {fileID: 6491967172669959914, guid: 4fb354fdc4f2706489fc0783e5cd33a8, type: 3}
+  Stats:
+    LifeData:
+      MaxHP: 100
+      HP: 100
+      HPRegen: 3
+    Speed: 1
+    HitChance: 70
+    AvoidChance: 5
+    MinAttack: 8
+    MaxAttack: 10
+    Defense: 8
+    CritChance: 5
+    CritExtra: 20
+    Range: 1
+    VisibilityRange: 5

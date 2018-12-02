@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee9738e629c17ca43b134b124212eee5, type: 3}
+  m_Script: {fileID: 11500000, guid: 4612d2172725d394680502de33f3809c, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: 
   MapPrefab: {fileID: 8655036446896915448, guid: 6291ae22a57a13942916557c9747426a,
     type: 3}
-  PlayerConfig: {fileID: 11400000, guid: e8ab7435ee65aef4281888d18f500eb6, type: 2}
+  PlayerConfig: {fileID: 11400000, guid: cff95b60a225b924b944ac77b6f19538, type: 2}
   DefaultTimescale: 1
   AllowDiagonals: 1
   BumpingWallsWillSpendMoves: 0
-  InputDelay: 0.2
+  InputDelay: 0.4

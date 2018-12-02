@@ -68,7 +68,7 @@ public enum PlayContext
     Simulating // AI is taking over
 }
 
-public class GameController : MonoBehaviour
+public class GameController : MonoBehaviour, IEntityController
 {
     [SerializeField] GameConfig _gameConfig;
 
@@ -80,12 +80,18 @@ public class GameController : MonoBehaviour
     int _turns;
 
     List<IScheduledEntity> _scheduledEntities;
+    List<IScheduledEntity> _scheduledToAdd;
 
     GameInput _gameInput;
     PlayContext _playContext;
 
     Dictionary<PlayContext, IPlayContext> _playContexts;
 
+    List<Monster> _monsters;
+
+    public delegate int DistanceFunction(Vector2Int p1, Vector2Int p2);
+
+    static DistanceFunction distanceFunction;
 
     private void Awake()
     {
@@ -93,6 +99,8 @@ public class GameController : MonoBehaviour
         _playContexts = new Dictionary<PlayContext, IPlayContext>();
         _playContexts[PlayContext.Action] = new ActionPlayContext();
         _scheduledEntities = new List<IScheduledEntity>();
+        _scheduledToAdd = new List<IScheduledEntity>();
+        _monsters = new List<Monster>();
     }
 
     // Start is called before the first frame update
@@ -104,11 +112,22 @@ public class GameController : MonoBehaviour
     void StartGame()
     {
         ClearGame();
+
+
+        distanceFunction = (_gameConfig.DistanceStrategy == DistanceStrategy.Manhattan) ? (DistanceFunction)MapUtils.GetManhattanDistance : (DistanceFunction)MapUtils.GetChebyshevDistance;            
+
+        if(_gameConfig.Seed >= 0)
+        {
+            Random.InitState(_gameConfig.Seed);
+        }
         _map = Instantiate<Map>(_gameConfig.MapPrefab);
-        //_map.Setup();
-        _player = Instantiate<Player>(_gameConfig.PlayerConfig.PlayerPrefab);
+        _map.Setup(this);
+        _scheduledEntities.Add(_map);
+
+        _player = Instantiate<Player>((Player)(_gameConfig.PlayerConfig.Prefab));
         _player.Setup(_gameConfig.PlayerConfig, _map);
-        _player.StartGame();
+        _player.StartGame(_map.PlayerStartCoords);
+        _scheduledEntities.Add(_player);
 
         _playContext = PlayContext.Action;
 
@@ -119,8 +138,14 @@ public class GameController : MonoBehaviour
     void ClearGame()
     {
         _scheduledEntities.Clear();
+        _scheduledToAdd.Clear();
         if(_player) Destroy(_player.gameObject);
         if(_map) Destroy(_map.gameObject);
+        foreach(var monster in _monsters)
+        {
+            Destroy(monster.gameObject);
+        }
+        _monsters.Clear();
     }
 
     void RestartGame()
@@ -138,13 +163,44 @@ public class GameController : MonoBehaviour
 
         if(willSpendTime)
         {
-            float units = _gameConfig.DefaultTimescale;
+            float units = _gameConfig.DefaultTimescale * (1/_player.Speed);
             foreach(var scheduled in _scheduledEntities)
             {
                 scheduled.AddTime(units, ref _playContext);
             }
             _elapsedUnits += units;
             _turns++;
+            Debug.Log($"Game time: {_elapsedUnits}, turns: {_turns}");
+
+            foreach (var toAdd in _scheduledToAdd)
+            {
+                _scheduledEntities.Add(toAdd);
+            }
+            _scheduledToAdd.Clear();
         }
+    }
+
+    public void CreateMonster(MonsterConfig cfg, Vector2Int coords)
+    {
+        Monster m = Instantiate<Monster>((Monster)(cfg.Prefab));
+        m.Setup(cfg, _map);
+        m.StartGame(coords);
+        _scheduledToAdd.Add(m);
+        _monsters.Add(m);
+    }
+
+    public bool FindEntityNearby(Vector2Int coords, int radius)
+    {
+        if (distanceFunction(_player.Coords, coords) <= radius)
+            return true;
+
+        foreach(var m in _monsters)
+        {
+            if(distanceFunction(m.Coords, coords) <= radius)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
