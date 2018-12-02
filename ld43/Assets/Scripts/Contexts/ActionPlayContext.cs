@@ -123,12 +123,14 @@ public class ActionPlayContext : IPlayContext
         if(data.AttackerDmgInflicted > 0)
         {
             StringBuilder builder = new StringBuilder();
+            builder.Append("<color=green>");
             builder.Append("The " + data.DefenderName + " is hit for ").Append((int)data.AttackerDmgInflicted).Append(" HP");
             if (data.DefenderDefeated)
             {
                 builder.Append(" and falls down!");
             }
             else builder.Append(". Remaining: ").Append((int)data.DefenderHP);
+            builder.Append("</color>");
             queue.AddEntry(builder.ToString());
         }
     }

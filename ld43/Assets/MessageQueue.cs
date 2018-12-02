@@ -30,22 +30,27 @@ public class MessageQueue
         }
     }
 
-    public string[] Peek(int n)
-    {
-        if (n == 1) return new string[] { Peek1() };
-
-        string[] sublist = new string[n];
-        LinkedListNode<string> node = _queue.First;
-        for(int i = 0; i < n; ++i)
-        {
-            sublist[i] = node.Value;
-            node = node.Next;
-        }
-        return sublist;
-    }
-
-    public string Peek1()
+    public string PeekFirst()
     {
         return _queue.First.Value;
+    }
+
+    public string PeekLast()
+    {
+        return _queue.Last.Value;
+    }
+
+    public string[] PeekLastN(int n)
+    {
+        if (n == 1) return new string[] { PeekLast() };
+
+        string[] sublist = new string[n];
+        LinkedListNode<string> node = _queue.Last;
+        for (int i = n - 1; i >= 0; --i)
+        {
+            sublist[i] = node.Value;
+            node = node.Previous;
+        }
+        return sublist;
     }
 }

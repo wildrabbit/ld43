@@ -7,7 +7,6 @@ public class StatsConfig
 {
     public LifeConfig LifeData;
 
-    public float Speed;
     public float HitChance;
     public float AvoidChance;
     public float MinAttack;

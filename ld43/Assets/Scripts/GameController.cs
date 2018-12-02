@@ -5,6 +5,12 @@ using UnityEngine;
 
 using URandom = UnityEngine.Random;
 
+public enum GameResult
+{
+    Running,
+    Lost,
+    Won // Not happening yet :D
+}
 public enum PlayContext
 {
     Action,
@@ -15,7 +21,6 @@ public enum PlayContext
 
 public class GameController : MonoBehaviour, IEntityController
 {
-
 
     [SerializeField] GameConfig _gameConfig;
 
@@ -38,9 +43,16 @@ public class GameController : MonoBehaviour, IEntityController
 
     List<Monster> _monsters;
 
-    public delegate int DistanceFunction(Vector2Int p1, Vector2Int p2);
+   
+    static DistanceFunctionDelegate _distanceFunction;
 
-    static DistanceFunction distanceFunction;
+    public int MonsterLimit => _gameConfig.MonsterLimit;
+
+    public bool ReachedMonsterLimit => _monsters.Count == MonsterLimit;
+
+    GameResult _gameResult;
+
+    public event Action<GameResult> GameFinished;
 
     private void Awake()
     {
@@ -62,10 +74,7 @@ public class GameController : MonoBehaviour, IEntityController
 
     void StartGame()
     {
-        ClearGame();
-
-
-        distanceFunction = (_gameConfig.DistanceStrategy == DistanceStrategy.Manhattan) ? (DistanceFunction)MapUtils.GetManhattanDistance : (DistanceFunction)MapUtils.GetChebyshevDistance;            
+        _distanceFunction = (_gameConfig.DistanceStrategy == DistanceStrategy.Manhattan) ? (DistanceFunctionDelegate)MapUtils.GetManhattanDistance : (DistanceFunctionDelegate)MapUtils.GetChebyshevDistance;            
 
         if(_gameConfig.Seed >= 0)
         {
@@ -76,7 +85,7 @@ public class GameController : MonoBehaviour, IEntityController
         _scheduledEntities.Add(_map);
 
         _player = Instantiate<Player>((Player)(_gameConfig.PlayerConfig.Prefab));
-        _player.Setup(_gameConfig.PlayerConfig, _map);
+        _player.Setup(_gameConfig.PlayerConfig, _map, this, _messageQueue);
         _player.StartGame(_map.PlayerStartCoords);
         _scheduledEntities.Add(_player);
         _messageQueue.AddEntry("You've finally entered the tower. An ominous silence permeates the hall.");
@@ -85,6 +94,8 @@ public class GameController : MonoBehaviour, IEntityController
 
         _turns = 0;
         _elapsedUnits = 0.0f;
+
+        _gameResult = GameResult.Running;
     }
 
     void ClearGame()
@@ -102,14 +113,25 @@ public class GameController : MonoBehaviour, IEntityController
         _monsters.Clear();
     }
 
-    void RestartGame()
+    IEnumerator RestartGame()
     {
+        ClearGame();
+        yield return new WaitForSeconds(0.1f);
         StartGame(); // TODO: Change level or smthing.
     }
 
     // Update is called once per frame
     void Update()
     {
+        if(_gameResult != GameResult.Running)
+        {
+            if(Input.anyKeyDown)
+            {
+                StartCoroutine(RestartGame());
+            }
+            return;
+        }
+
         _gameInput.Read();
 
         bool willSpendTime;
@@ -128,6 +150,7 @@ public class GameController : MonoBehaviour, IEntityController
 
             foreach(var toRemove in _monstersToRemove)
             {
+                _scheduledEntities.Remove(toRemove);
                 Destroy(toRemove.gameObject);
                 _monsters.Remove(toRemove);
             }
@@ -139,27 +162,36 @@ public class GameController : MonoBehaviour, IEntityController
             }
             _scheduledToAdd.Clear();
         }
+
+        if(Mathf.Approximately(_player.HP,0.0f))
+        {
+            Destroy(_player.gameObject);
+            _player = null;
+            _scheduledEntities.Remove(_player);
+            _gameResult = GameResult.Lost;
+            GameFinished?.Invoke(_gameResult);
+        }
     }
 
     public void CreateMonster(MonsterConfig cfg, Vector2Int coords)
     {
         Monster m = Instantiate<Monster>((Monster)(cfg.Prefab));
         m.name = cfg.Name;
-        m.Setup(cfg, _map);
+        m.Setup(cfg, _map, this, _messageQueue);
         m.StartGame(coords);
         _scheduledToAdd.Add(m);
         _messageQueue.AddEntry("A new " + m.Name + " has appeared @" + coords.ToString());
         _monsters.Add(m);
     }
 
-    public bool FindEntityNearby(Vector2Int coords, int radius)
+    public bool FindEntityNearby(Vector2Int coords, int radius, Entity refEntity = null)
     {
-        if (distanceFunction(_player.Coords, coords) <= radius)
+        if (_distanceFunction(_player.Coords, coords) <= radius && refEntity != _player)
             return true;
 
         foreach(var m in _monsters)
         {
-            if(distanceFunction(m.Coords, coords) <= radius)
+            if(_distanceFunction(m.Coords, coords) <= radius && refEntity != m)
             {
                 return true;
             }
@@ -203,4 +235,11 @@ public class GameController : MonoBehaviour, IEntityController
             }
         }
     }
+
+    public Player GetPlayer()
+    {
+        return _player;
+    }
+
+    public DistanceFunctionDelegate DistanceFunction => _distanceFunction;
 }

@@ -28,4 +28,6 @@ public class GameConfig : ScriptableObject
 
     public int Seed = -1;
     public int QueueLimit = 100;
+
+    public int MonsterLimit = 5;
 }

@@ -41,6 +41,11 @@ public class Map: MonoBehaviour, IScheduledEntity
     {
         _elapsed += timeUnits;
 
+        if(_entityController.ReachedMonsterLimit)
+        {
+            return;
+        }
+
         foreach(var pair in _monsterSpawnCoords)
         {
             pair.Value.Elapsed += timeUnits;

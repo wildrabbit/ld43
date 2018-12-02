@@ -7,7 +7,6 @@ public abstract class Entity: MonoBehaviour, IScheduledEntity
 {
     public string Name {  get { return _config.Name; } }
     public Vector2Int Coords { get; protected set; }
-    public float Speed => _config.Stats.Speed;
     public InteractionType DefaultInteraction => _config.DefaultPlayerInteraction;
     public InteractionType DefaultMonsterInteraction => _config.MonsterInteraction;
     public int InteractionPriority => _config.Prio;
@@ -20,26 +19,32 @@ public abstract class Entity: MonoBehaviour, IScheduledEntity
     public float MaxAttack { get { return _config.Stats.MaxAttack; } }
     public float Defense { get { return _config.Stats.Defense; } }
     public float HP { get { return _hp; } }
+    public float MaxHP { get { return _maxHP; } }
 
     protected float _hp;
+    protected float _maxHP;
     protected Map _map;
     protected Vector2Int _startCoords;
-    protected Vector2Int _coords;
     protected EntityConfig _config;
 
     protected StatsConfig _stats;
 
+    protected IEntityController _entityController;
+    protected MessageQueue _messageQueue;
     // TODO: Inventory
 
     // TODO: Effects
 
     public abstract void AddTime(float timeUnits, ref PlayContext playContext);
 
-    public void Setup(EntityConfig entity, Map map)
+    public void Setup(EntityConfig entity, Map map, IEntityController controller, MessageQueue queue)
     {
         _map = map;
+        _entityController = controller;
         _config = entity;
         _hp = _config.Stats.LifeData.HP;
+        _maxHP = _config.Stats.LifeData.MaxHP;
+        _messageQueue = queue;
         DoSetup();
     }
 
