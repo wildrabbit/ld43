@@ -4,6 +4,22 @@ using UnityEngine.Tilemaps;
 
 public class Map: MonoBehaviour, IScheduledEntity
 {
+    private class PathInfo
+    {
+        public Vector2Int Coords;
+        public Vector2Int? From;
+        public int Distance;
+
+        public PathInfo (Vector2Int coords, Vector2Int? from = null, int dist = System.Int32.MaxValue)
+        {
+            Coords = coords;
+            From = from;
+            Distance = dist;
+        }
+
+        public string ToString() => $"{Coords} <- {(From.HasValue ? From.Value.ToString() : "NONE")} [{Distance}]";
+    }
+
     public class SpawnData
     {
         public MonsterSpawnPoint Point;
@@ -119,6 +135,92 @@ public class Map: MonoBehaviour, IScheduledEntity
         return true;
     }
 
+    public void FindPath(Entity entity, Vector2Int targetCoords, ref List<Vector2Int> path)
+    {
+        path.Clear();
+        if(entity.Coords == targetCoords)
+        {
+            path.Add(targetCoords);
+            return;
+        }
+
+        Dictionary<Vector2Int, PathInfo> visitedInfo = new Dictionary<Vector2Int, PathInfo>();
+        PriorityQueue<Vector2Int> coordsQueue = new PriorityQueue<Vector2Int>();
+        BoundsInt mapBounds = _groundTilemap.cellBounds; // CAREFUL!! If we touch the map and delete cell bounds isn't refreshed automatically!
+        TileBase[] allTiles = _groundTilemap.GetTilesBlock(mapBounds);
+        List<Vector2Int> validTiles = new List<Vector2Int>();
+        foreach(var position in mapBounds.allPositionsWithin)
+        {
+            if(_groundTilemap.HasTile(position))
+            {
+                Vector2Int pos2D = (Vector2Int)position;
+                validTiles.Add(pos2D);
+                visitedInfo[pos2D] = new PathInfo(pos2D);
+                coordsQueue.Enqueue(pos2D, visitedInfo[pos2D].Distance);
+            }           
+        }
+        int walkableTiles = validTiles.Count;
+
+        visitedInfo[entity.Coords].Distance = 0;
+        coordsQueue.UpdateKey(entity.Coords, visitedInfo[entity.Coords].Distance);
+
+        Vector2Int[] neighboursDelta = MapUtils.GetNeighbourDeltas(_entityController.DistanceStrategy);
+
+        while (coordsQueue.Count > 0)
+        {
+            Vector2Int currentCoords = coordsQueue.Dequeue();
+            PathInfo currentInfo = visitedInfo[currentCoords];
+            int formerDistance = currentInfo.Distance;
+            foreach(var delta in neighboursDelta)
+            {
+                Vector2Int neighbourCoords = currentCoords + delta;
+                if(!visitedInfo.ContainsKey(neighbourCoords))
+                {
+                    continue;
+                }
+
+                // TODO: Other checks: Doors, etc, etc.
+                PathInfo neighbourInfo = visitedInfo[neighbourCoords];
+                int distance = formerDistance + 1;
+                if(distance < neighbourInfo.Distance)
+                {
+                    neighbourInfo.From = currentCoords;
+                    neighbourInfo.Distance = distance;
+
+                    int count = coordsQueue.Count;
+                    if (coordsQueue.Count > 0)
+                    {
+                        coordsQueue.UpdateKey(neighbourCoords, distance);
+                    }
+                    if(count != coordsQueue.Count)
+                    {
+                        Debug.LogError("Whaaaat");
+                    }
+                }
+            }
+        }
+
+        if(visitedInfo.TryGetValue(targetCoords, out var destinationInfo))
+        {
+            List<Vector2Int> rList = new List<Vector2Int>();
+            rList.Add(targetCoords);
+            while(destinationInfo.From.HasValue)
+            {
+                rList.Add(destinationInfo.From.Value);
+                destinationInfo = visitedInfo[destinationInfo.From.Value];
+            }
+
+            for(int i = rList.Count - 1; i >= 0; i--)
+            {
+                path.Add(rList[i]);
+            }
+        }
+        else
+        {
+            path.Add(entity.Coords);
+        }
+    }
+
     void SetupMonsterStartCoords()
     {
         GameObject[] monsterSpawns = GameObject.FindGameObjectsWithTag("Spawn");
@@ -138,3 +240,4 @@ public class Map: MonoBehaviour, IScheduledEntity
         _monsterSpawnCoords = new Dictionary<Vector2Int, SpawnData>();
     }
 }
+ 

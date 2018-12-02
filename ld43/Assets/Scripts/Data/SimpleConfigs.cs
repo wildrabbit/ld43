@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [Serializable]
 public class StatsConfig
@@ -14,7 +15,9 @@ public class StatsConfig
     public float Defense;
     public float CritChance;
     public float CritExtra;
-    public int Range;
+
+    [FormerlySerializedAs("Range")]
+    public int BaseAttackRange;
     public int VisibilityRange;
 }
 

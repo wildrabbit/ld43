@@ -5,7 +5,7 @@ using UnityEngine;
 
 public abstract class Entity: MonoBehaviour, IScheduledEntity
 {
-    public string Name {  get { return _config.Name; } }
+    public string Name;
     public Vector2Int Coords { get; protected set; }
     public InteractionType DefaultInteraction => _config.DefaultPlayerInteraction;
     public InteractionType DefaultMonsterInteraction => _config.MonsterInteraction;
@@ -21,6 +21,7 @@ public abstract class Entity: MonoBehaviour, IScheduledEntity
     public float HP { get { return _hp; } }
     public float MaxHP { get { return _maxHP; } }
 
+    public float HPPercent {  get { return _hp / _maxHP; } }
     protected float _hp;
     protected float _maxHP;
     protected Map _map;

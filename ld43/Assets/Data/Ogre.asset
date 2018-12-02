@@ -26,9 +26,12 @@ MonoBehaviour:
     Defense: 10
     CritChance: 0
     CritExtra: 0
-    Range: 1
+    BaseAttackRange: 1
     VisibilityRange: 3
   DefaultPlayerInteraction: 5
   MonsterInteraction: 0
   Prio: 0
-  ThinkingDelay: 1
+  ThinkingDelay: 1.5
+  PathUpdateDelay: 6
+  EscapeHPPercent: 25
+  KeepAttackingPlayerIfBelowHPPercent: 20

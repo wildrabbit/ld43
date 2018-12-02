@@ -43,6 +43,8 @@ public class GameController : MonoBehaviour, IEntityController
 
     List<Monster> _monsters;
 
+    Dictionary<MonsterConfig, int> _monsterIDCounters;
+
    
     static DistanceFunctionDelegate _distanceFunction;
 
@@ -64,6 +66,7 @@ public class GameController : MonoBehaviour, IEntityController
         _monsters = new List<Monster>();
         _monstersToRemove = new List<Monster>();
         _messageQueue = new MessageQueue(_gameConfig.QueueLimit);
+        _monsterIDCounters = new Dictionary<MonsterConfig, int>();
     }
 
     // Start is called before the first frame update
@@ -111,6 +114,8 @@ public class GameController : MonoBehaviour, IEntityController
             Destroy(monster.gameObject);
         }
         _monsters.Clear();
+        _monsterIDCounters.Clear();
+        GameFinished = null;
     }
 
     IEnumerator RestartGame()
@@ -176,7 +181,13 @@ public class GameController : MonoBehaviour, IEntityController
     public void CreateMonster(MonsterConfig cfg, Vector2Int coords)
     {
         Monster m = Instantiate<Monster>((Monster)(cfg.Prefab));
-        m.name = cfg.Name;
+        if(!_monsterIDCounters.ContainsKey(cfg))
+        {
+            _monsterIDCounters.Add(cfg, 0);
+        }
+        m.Name = cfg.Name + "_" + _monsterIDCounters[cfg];
+        m.name = m.Name;
+        _monsterIDCounters[cfg]++;
         m.Setup(cfg, _map, this, _messageQueue);
         m.StartGame(coords);
         _scheduledToAdd.Add(m);
@@ -242,4 +253,6 @@ public class GameController : MonoBehaviour, IEntityController
     }
 
     public DistanceFunctionDelegate DistanceFunction => _distanceFunction;
+
+    public DistanceStrategy DistanceStrategy => _gameConfig.DistanceStrategy;
 }

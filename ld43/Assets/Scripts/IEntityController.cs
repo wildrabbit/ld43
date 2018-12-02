@@ -8,6 +8,7 @@ public interface IEntityController
 {
     int MonsterLimit { get; }
     bool ReachedMonsterLimit { get; }
+    DistanceStrategy DistanceStrategy { get; }
     DistanceFunctionDelegate DistanceFunction { get; }
 
     void CreateMonster(MonsterConfig cfg, Vector2Int coords);

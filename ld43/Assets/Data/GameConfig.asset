@@ -18,4 +18,8 @@ MonoBehaviour:
   DefaultTimescale: 1
   AllowDiagonals: 1
   BumpingWallsWillSpendMoves: 0
-  InputDelay: 0.4
+  InputDelay: 0.25
+  DistanceStrategy: 0
+  Seed: -1
+  QueueLimit: 100
+  MonsterLimit: 5
