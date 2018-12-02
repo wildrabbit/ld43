@@ -27,4 +27,5 @@ public class GameConfig : ScriptableObject
     public DistanceStrategy DistanceStrategy = DistanceStrategy.Manhattan;
 
     public int Seed = -1;
+    public int QueueLimit = 100;
 }

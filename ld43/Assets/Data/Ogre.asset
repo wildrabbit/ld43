@@ -10,21 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23bb34a2d3988ca4fb5e2e5f3d9a74e3, type: 3}
-  m_Name: TestMonsterConfig
+  m_Name: Ogre
   m_EditorClassIdentifier: 
-  Prefab: {fileID: 8842902094511777084, guid: 066548ba5cb95d14084593b3207f7c96, type: 3}
+  Prefab: {fileID: 2174726690547007893, guid: 0c4a4d246ba8172499b480b473da79db, type: 3}
+  Name: Ogre
   Stats:
     LifeData:
-      MaxHP: 80
-      HP: 80
+      MaxHP: 120
+      HP: 120
       HPRegen: 0
-    Speed: 0.8
-    HitChance: 50
-    AvoidChance: 2
-    MinAttack: 8
-    MaxAttack: 8
-    Defense: 8
+    Speed: 0.4
+    HitChance: 30
+    AvoidChance: 1
+    MinAttack: 12
+    MaxAttack: 18
+    Defense: 10
     CritChance: 0
     CritExtra: 0
     Range: 1
-    VisibilityRange: 5
+    VisibilityRange: 3
+  DefaultPlayerInteraction: 5
+  MonsterInteraction: 0
+  Prio: 0

@@ -1,64 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InputEntry
-{
-    float _last;
-
-    string _buttonKey;
-    float _delay;
-
-    public InputEntry(string key, float delay)
-    {
-        _buttonKey = key;
-        _delay = delay;
-        _last = -1;
-    }
-
-    public bool Read()
-    {
-        if((_last < 0 || Time.time - _last >= _delay) && Input.GetButton(_buttonKey))
-        {
-            _last = Time.time;
-            return true;
-        }
-        return false;
-    }
-}
-
-
-public class GameInput
-{
-    float _moveInputDelay;
-
-    public int xAxis;
-    public int yAxis;
-    public bool idleTurn;
-
-    InputEntry leftInput;
-    InputEntry rightInput;
-    InputEntry upInput;
-    InputEntry downInput;
-    InputEntry idleInput;
-
-    public GameInput(float inputDelay)
-    {
-        _moveInputDelay = inputDelay;
-        leftInput = new InputEntry("left", _moveInputDelay);
-        rightInput = new InputEntry("right", _moveInputDelay);
-        upInput = new InputEntry("up", _moveInputDelay);
-        downInput = new InputEntry("down", _moveInputDelay);
-        idleInput = new InputEntry("idle", _moveInputDelay);
-    }
-
-    public void Read()
-    {
-        xAxis = leftInput.Read() ? -1 : rightInput.Read() ? 1 : 0;
-        yAxis = downInput.Read() ? -1 : upInput.Read() ? 1 : 0;
-        idleTurn = idleInput.Read();
-    }
-}
+using URandom = UnityEngine.Random;
 
 public enum PlayContext
 {
@@ -70,6 +15,8 @@ public enum PlayContext
 
 public class GameController : MonoBehaviour, IEntityController
 {
+
+
     [SerializeField] GameConfig _gameConfig;
 
     Map _map;
@@ -82,6 +29,8 @@ public class GameController : MonoBehaviour, IEntityController
     List<IScheduledEntity> _scheduledEntities;
     List<IScheduledEntity> _scheduledToAdd;
 
+    List<Monster> _monstersToRemove;
+    private MessageQueue _messageQueue;
     GameInput _gameInput;
     PlayContext _playContext;
 
@@ -101,6 +50,8 @@ public class GameController : MonoBehaviour, IEntityController
         _scheduledEntities = new List<IScheduledEntity>();
         _scheduledToAdd = new List<IScheduledEntity>();
         _monsters = new List<Monster>();
+        _monstersToRemove = new List<Monster>();
+        _messageQueue = new MessageQueue(_gameConfig.QueueLimit);
     }
 
     // Start is called before the first frame update
@@ -118,7 +69,7 @@ public class GameController : MonoBehaviour, IEntityController
 
         if(_gameConfig.Seed >= 0)
         {
-            Random.InitState(_gameConfig.Seed);
+            URandom.InitState(_gameConfig.Seed);
         }
         _map = Instantiate<Map>(_gameConfig.MapPrefab);
         _map.Setup(this);
@@ -128,6 +79,7 @@ public class GameController : MonoBehaviour, IEntityController
         _player.Setup(_gameConfig.PlayerConfig, _map);
         _player.StartGame(_map.PlayerStartCoords);
         _scheduledEntities.Add(_player);
+        _messageQueue.AddEntry("You've finally entered the tower. An ominous silence permeates the hall.");
 
         _playContext = PlayContext.Action;
 
@@ -137,8 +89,10 @@ public class GameController : MonoBehaviour, IEntityController
 
     void ClearGame()
     {
+        _messageQueue.Clear();
         _scheduledEntities.Clear();
         _scheduledToAdd.Clear();
+        _monstersToRemove.Clear();
         if(_player) Destroy(_player.gameObject);
         if(_map) Destroy(_map.gameObject);
         foreach(var monster in _monsters)
@@ -159,7 +113,7 @@ public class GameController : MonoBehaviour, IEntityController
         _gameInput.Read();
 
         bool willSpendTime;
-        _playContext = _playContexts[_playContext].Update(_gameInput, _player, _map, _gameConfig, out willSpendTime);
+        _playContext = _playContexts[_playContext].Update(_gameInput, _player, _map, _gameConfig, this, _messageQueue, out willSpendTime);
 
         if(willSpendTime)
         {
@@ -172,6 +126,13 @@ public class GameController : MonoBehaviour, IEntityController
             _turns++;
             Debug.Log($"Game time: {_elapsedUnits}, turns: {_turns}");
 
+            foreach(var toRemove in _monstersToRemove)
+            {
+                Destroy(toRemove.gameObject);
+                _monsters.Remove(toRemove);
+            }
+            _monstersToRemove.Clear();
+
             foreach (var toAdd in _scheduledToAdd)
             {
                 _scheduledEntities.Add(toAdd);
@@ -183,9 +144,11 @@ public class GameController : MonoBehaviour, IEntityController
     public void CreateMonster(MonsterConfig cfg, Vector2Int coords)
     {
         Monster m = Instantiate<Monster>((Monster)(cfg.Prefab));
+        m.name = cfg.Name;
         m.Setup(cfg, _map);
         m.StartGame(coords);
         _scheduledToAdd.Add(m);
+        _messageQueue.AddEntry("A new " + m.Name + " has appeared @" + coords.ToString());
         _monsters.Add(m);
     }
 
@@ -202,5 +165,42 @@ public class GameController : MonoBehaviour, IEntityController
             }
         }
         return false;
+    }
+
+    public List<Entity> GetEntitiesAt(Vector2Int actionTargetCoords, Entity[] excluded = null)
+    {
+        List<Entity> entities = new List<Entity>();
+        Func<Entity,Vector2Int,Entity[], bool> presenceCheck = (entity, coords, blacklist) => entity.Coords == coords && (blacklist == null || blacklist.Length == 0 || !System.Array.Exists(blacklist, x => x == entity));
+        if(presenceCheck(_player,actionTargetCoords,excluded))
+        {
+            entities.Add(_player);
+        }
+
+        foreach(var m in _monsters)
+        {
+            if(presenceCheck(m, actionTargetCoords, excluded))
+            {
+                entities.Add(m);
+            }
+        }
+
+        entities.Sort((x, y) => x.InteractionPriority.CompareTo(y.InteractionPriority));
+        return entities;
+    }
+
+    public void RemoveEntity(Entity e)
+    {
+        if(e is Player)
+        {
+            // Oops
+        }
+        else
+        {
+            Monster m = e as Monster;
+            if(m != null && _monsters.Contains(m))
+            {
+                _monstersToRemove.Add(m);
+            }
+        }
     }
 }

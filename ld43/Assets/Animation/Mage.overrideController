@@ -6,7 +6,7 @@ AnimatorOverrideController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Critter
+  m_Name: Mage
   m_Controller: {fileID: 9100000, guid: 60a2581392ee5ad43b632c5c07fb3b21, type: 2}
   m_Clips:
   - m_OriginalClip: {fileID: 7400000, guid: ed667f5524a5de84aa8eb78be062d491, type: 2}

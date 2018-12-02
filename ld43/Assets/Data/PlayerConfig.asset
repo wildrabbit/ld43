@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: PlayerConfig
   m_EditorClassIdentifier: 
   Prefab: {fileID: 6491967172669959914, guid: 4fb354fdc4f2706489fc0783e5cd33a8, type: 3}
+  Name: Player
   Stats:
     LifeData:
       MaxHP: 100
@@ -21,10 +22,13 @@ MonoBehaviour:
     Speed: 1
     HitChance: 70
     AvoidChance: 5
-    MinAttack: 8
-    MaxAttack: 10
+    MinAttack: 15
+    MaxAttack: 30
     Defense: 8
-    CritChance: 5
-    CritExtra: 20
+    CritChance: 10
+    CritExtra: 30
     Range: 1
     VisibilityRange: 5
+  DefaultPlayerInteraction: 0
+  MonsterInteraction: 0
+  Prio: 0
