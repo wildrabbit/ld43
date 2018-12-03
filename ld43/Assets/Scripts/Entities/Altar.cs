@@ -6,7 +6,12 @@ using URandom = UnityEngine.Random;
 public class Altar : Entity
 {
     AltarConfig _altarConfig;
-    bool Used;
+
+    public AltarConfig Config => _altarConfig;
+
+    public bool Used;
+
+    public event Action<Altar, Action> PlayerInteracted;
 
     protected override void DoSetup()
     {
@@ -16,8 +21,7 @@ public class Altar : Entity
 
     public override PlayContext PlayerInteracts()
     {
-        //Action callback = Used ? null : 
-        //_entityController.SetupAltarContext(_altarConfig, sacrificeAvailable:  Used, callback);
+        PlayerInteracted?.Invoke(this, () => Used = true);
         return PlayContext.AltarContext;
     }
 

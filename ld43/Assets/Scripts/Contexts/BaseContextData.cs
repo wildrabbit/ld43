@@ -22,5 +22,7 @@ public class AltarContextData: BaseContextData
     public AltarConfig altarConfig;
     public Player player;
     public bool sacrificeAvailable;
-    public ItemConfig[] Choices;
+    public ItemConfig[] choices;
+    public IUIController uiController;
+    public int selectedIndex;
 }

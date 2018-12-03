@@ -27,17 +27,21 @@ public class InputEntry
 
 public class GameInput
 {
+    const int kNumInputs = 3;
     float _moveInputDelay;
 
     public int xAxis;
     public int yAxis;
     public bool idleTurn;
+    public bool[] numbersPressed;
 
     InputEntry leftInput;
     InputEntry rightInput;
     InputEntry upInput;
     InputEntry downInput;
     InputEntry idleInput;
+
+    InputEntry[] numInputs;
 
     public GameInput(float inputDelay)
     {
@@ -47,6 +51,14 @@ public class GameInput
         upInput = new InputEntry("up", _moveInputDelay);
         downInput = new InputEntry("down", _moveInputDelay);
         idleInput = new InputEntry("idle", _moveInputDelay);
+
+        numInputs = new InputEntry[kNumInputs];
+        numbersPressed = new bool[kNumInputs];
+        for(int i = 0; i < kNumInputs; ++i)
+        {
+            numInputs[i] = new InputEntry("num" + (i+1).ToString(), _moveInputDelay);
+            numbersPressed[i] = false;
+        }
     }
 
     public void Read()
@@ -54,5 +66,9 @@ public class GameInput
         xAxis = leftInput.Read() ? -1 : rightInput.Read() ? 1 : 0;
         yAxis = downInput.Read() ? -1 : upInput.Read() ? 1 : 0;
         idleTurn = idleInput.Read();
+        for(int i = 0; i < kNumInputs; ++i)
+        {
+            numbersPressed[i] = numInputs[i].Read();
+        }
     }
 }

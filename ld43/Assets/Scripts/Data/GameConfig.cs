@@ -33,5 +33,5 @@ public class GameConfig : ScriptableObject
     public int MonsterLimit = 5;
 
     [Header("UI menus")]
-    public Canvas AltarUIPrefab;
+    public UIAltarView AltarUIPrefab;
 }

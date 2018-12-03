@@ -9,7 +9,6 @@ public enum InteractionType
     Block, // Like bumping vs a wall
     Inspect,
     Pick,
-    Altar,
     Attack,
     CustomInteraction
 }

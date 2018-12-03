@@ -128,6 +128,7 @@ public class GameController : MonoBehaviour, IEntityController
             Altar altar = Instantiate<Altar>(_gameConfig.AltarPrefab);
             altar.Setup(spawnPoint.AltarConfig, _map, this, _messageQueue);
             altar.StartGame(spawnPoint.Coords);
+            altar.PlayerInteracted += OnAltarInteraction;
             _altars.Add(altar);
         }
 
@@ -139,6 +140,13 @@ public class GameController : MonoBehaviour, IEntityController
         _gameResult = GameResult.Running;
 
         SetupActionContexts();
+
+        _uiController.Setup(_gameConfig);
+    }
+
+    public void OnAltarInteraction(Altar altar, Action callback)
+    {
+        SetupAltarContext(altar.Config, !altar.Used, callback);
     }
 
     private void SetupActionContexts()
@@ -164,6 +172,12 @@ public class GameController : MonoBehaviour, IEntityController
             Destroy(monster.gameObject);
         }
         _monsters.Clear();
+
+        foreach (var altar in _altars)
+        {
+            Destroy(altar.gameObject);
+        }
+        _altars.Clear();
         _monsterIDCounters.Clear();
         GameFinished = null;
     }
@@ -257,6 +271,14 @@ public class GameController : MonoBehaviour, IEntityController
                 return true;
             }
         }
+
+        foreach (var altar in _altars)
+        {
+            if (_distanceFunction(altar.Coords, coords) <= radius && refEntity != altar)
+            {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -277,6 +299,14 @@ public class GameController : MonoBehaviour, IEntityController
             }
         }
 
+        foreach (var a in _altars)
+        {
+            if (presenceCheck(a, actionTargetCoords, excluded))
+            {
+                entities.Add(a);
+            }
+        }
+
         entities.Sort((x, y) => x.InteractionPriority.CompareTo(y.InteractionPriority));
         return entities;
     }
@@ -289,11 +319,11 @@ public class GameController : MonoBehaviour, IEntityController
         }
         else
         {
-            Monster m = e as Monster;
-            if(m != null && _monsters.Contains(m))
+            if (e is Monster m && m != null && _monsters.Contains(m))
             {
                 _monstersToRemove.Add(m);
             }
+            // The altars aren't removed
         }
     }
 
@@ -308,14 +338,29 @@ public class GameController : MonoBehaviour, IEntityController
         contextData.altarConfig = data;
         contextData.sacrificeAvailable = sacrificeAvailable;
         contextData.callback = callback;
-        if(contextData.sacrificeAvailable)
+        contextData.uiController = _uiController;
+        contextData.selectedIndex = -1;
+
+        if (contextData.sacrificeAvailable)
         {
-            if(contextData.Choices == null)
-                contextData.Choices = new ItemConfig[3];
+            if(contextData.choices == null)
+            {
+                contextData.choices = new ItemConfig[data.NumChoices];
+                List<ItemConfig> lootChoices = new List<ItemConfig>(data.AvailableLoot);
+                for(int i = 0; i <  data.NumChoices; ++i)
+                {
+                    int idx = URandom.Range(0, lootChoices.Count);
+                    contextData.choices[i] = lootChoices[idx];
+
+                    lootChoices.RemoveAt(idx);
+                }
+            }
+            _uiController.ShowAltarView(contextData.choices, contextData.selectedIndex);
+            _messageQueue.AddEntry("You stand in front of a strange, blood-covered altar. Three treasures lie on top, and a small inscription");
         }
-        else if(contextData.Choices != null)
+        else if(contextData.choices != null)
         {
-            contextData.Choices = null;
+            contextData.choices = null;
         }
     }
 

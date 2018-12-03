@@ -28,7 +28,7 @@ MonoBehaviour:
     CritExtra: 0
     BaseAttackRange: 0
     VisibilityRange: 0
-  DefaultPlayerInteraction: 0
+  DefaultPlayerInteraction: 5
   MonsterInteraction: 0
   Prio: 0
   DefaultMaxHPPercentCost: 25

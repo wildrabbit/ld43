@@ -28,7 +28,7 @@ MonoBehaviour:
     CritExtra: 0
     BaseAttackRange: 1
     VisibilityRange: 3
-  DefaultPlayerInteraction: 5
+  DefaultPlayerInteraction: 4
   MonsterInteraction: 0
   Prio: 0
   ThinkingDelay: 1.2

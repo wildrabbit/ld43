@@ -64,7 +64,7 @@ public class ActionPlayContext : IPlayContext
                                 int j = i + 1;
                                 for (; j < entities.Count; ++j)
                                 {
-                                    if(entities[j].DefaultInteraction == InteractionType.Attack || entities[j].DefaultInteraction == InteractionType.CustomInteraction || entities[j].DefaultInteraction == InteractionType.Altar)
+                                    if(entities[j].DefaultInteraction == InteractionType.Attack || entities[j].DefaultInteraction == InteractionType.CustomInteraction)
                                     {
                                         playerWillMove = false;
                                         break;

@@ -25,4 +25,5 @@ MonoBehaviour:
   Seed: -1
   QueueLimit: 100
   MonsterLimit: 5
-  AltarUIPrefab: {fileID: 0}
+  AltarUIPrefab: {fileID: 4107955656800476042, guid: bb26f252d3d145c44a2d60f33718b850,
+    type: 3}
