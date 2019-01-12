@@ -22,7 +22,7 @@ public class UIAltarView: MonoBehaviour
     private void Awake()
     {
         _canvas = GetComponent<Canvas>();
-        _itemContainer = transform.FindChild("ItemContainer") as RectTransform;
+        _itemContainer = transform.Find("ItemContainer") as RectTransform;
     }
     public void Show(ItemConfig[] items, int defaultIndex)
     {
